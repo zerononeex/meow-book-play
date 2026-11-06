@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meow Library — Reader Ideas</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#2e1c10; color:#fdf3df; font-family:-apple-system, "Segoe UI", Roboto, sans-serif; padding:22px 14px 40px; }
+  h1 { font-size:26px; text-align:center; }
+  .sub { text-align:center; opacity:.85; margin:6px auto 22px; max-width:560px; font-size:15px; line-height:1.45; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; max-width:1100px; margin:0 auto; }
+  .card { background:#43301d; border-radius:20px; padding:14px 14px 16px; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+  .card h2 { font-size:18px; margin-bottom:4px; }
+  .card h2 .n { background:#f2a541; color:#3a2410; border-radius:50%; display:inline-flex; width:26px; height:26px; align-items:center; justify-content:center; font-size:15px; margin-right:7px; vertical-align:2px; }
+  .card p { font-size:13.5px; line-height:1.45; opacity:.88; margin-bottom:12px; }
+  .device { position:relative; aspect-ratio:4/3; background:#17100a; border-radius:16px; overflow:hidden; border:5px solid #0d0805; }
+  .page { position:absolute; inset:0; background:url('assets/enter-hero.jpg') center/cover no-repeat; }
+  .bar { position:absolute; left:0; right:0; bottom:0; height:15%; background:#f7e7c8; display:flex; align-items:center; justify-content:space-between; padding:0 10px; }
+  .btn { width:34px; height:34px; border-radius:50%; background:#fff8ea; display:flex; align-items:center; justify-content:center; font-size:17px; box-shadow:0 2px 5px rgba(90,55,10,.35); overflow:hidden; flex:none; }
+  .btn img { width:100%; height:100%; object-fit:cover; }
+  .num { font-weight:700; color:#6b4423; font-size:16px; }
+  .switch { width:40px; height:23px; border-radius:12px; background:#4cd964; position:relative; flex:none; }
+  .switch::after { content:''; position:absolute; top:2px; right:2px; width:19px; height:19px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+  .switch.off { background:#c9c2b4; } .switch.off::after { right:auto; left:2px; }
+  /* 1 theatre */
+  .ghost { position:absolute; left:0; right:0; bottom:0; height:15%; background:rgba(247,231,200,.16); display:flex; align-items:center; justify-content:center; gap:6px; }
+  .ghost i { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.75); display:block; }
+  /* 2 nook */
+  .nook { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 42%, #ffe9b8 0%, #d9a45c 55%, #8a5a28 100%); }
+  .frame { position:absolute; left:7%; right:7%; top:6%; bottom:23%; border:12px solid #7c4a21; border-image:linear-gradient(160deg,#96682f,#6e431d) 1; border-radius:6px; overflow:hidden; box-shadow:0 8px 20px rgba(40,20,0,.5), inset 0 0 40px rgba(255,190,80,.35); }
+  .frame .page { position:absolute; inset:0; }
+  .ledge { position:absolute; left:0; right:0; bottom:0; height:17%; background:linear-gradient(#a4713a,#7c4a21); display:flex; align-items:center; justify-content:space-between; padding:0 14px; }
+  /* 3 tap zones */
+  .zone { position:absolute; top:0; bottom:0; width:30%; display:flex; align-items:center; justify-content:center; }
+  .zone.l { left:0; background:linear-gradient(90deg, rgba(255,244,214,.5), transparent); }
+  .zone.r { right:0; background:linear-gradient(-90deg, rgba(255,244,214,.5), transparent); }
+  .chev { width:52px; height:52px; border-radius:50%; background:rgba(255,248,234,.88); color:#8a5a28; font-size:30px; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(90,55,10,.3); }
+  .mini { position:absolute; left:10px; top:10px; width:34px; height:34px; }
+  .pagenum { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); background:rgba(255,248,234,.9); color:#6b4423; font-weight:700; border-radius:12px; padding:2px 12px; font-size:14px; }
+  /* 4 bedtime */
+  .night { position:absolute; inset:0; background:#241207; }
+  .nightpage { position:absolute; inset:0; background:url('assets/enter-hero.jpg') center/cover no-repeat; filter:brightness(.78) sepia(.35); }
+  .moon { position:absolute; top:8px; right:12px; font-size:26px; filter:drop-shadow(0 0 8px rgba(255,220,130,.8)); }
+  .nightbar { position:absolute; left:0; right:0; bottom:0; height:15%; background:#3a2412; display:flex; align-items:center; justify-content:space-between; padding:0 10px; }
+  .nightbar .btn { background:#5a3a1e; box-shadow:none; }
+  .nightbar .num { color:#e8c88f; }
+  /* 5 filmstrip */
+  .strip { position:absolute; left:0; right:0; bottom:15%; height:19%; background:rgba(46,28,16,.92); display:flex; align-items:center; gap:8px; padding:6px 10px; }
+  .thumb { flex:1; height:100%; border-radius:6px; background:url('assets/enter-hero.jpg') center/cover; opacity:.75; }
+  .thumb.c { background-image:url('assets/congrats-cat.jpg'); }
+  .thumb.sel { outline:3px solid #f2a541; opacity:1; }
+  /* 6 turn styles */
+  .curl { position:absolute; right:0; bottom:15%; width:64px; height:64px; background:linear-gradient(315deg, transparent 49%, rgba(255,255,255,.85) 50%, #d9c39a 78%, #b89a68 100%); border-radius:0 0 0 14px; box-shadow:-4px -4px 10px rgba(60,35,0,.35); }
+  .chips { display:flex; gap:8px; margin-top:12px; }
+  .chip { flex:1; text-align:center; padding:8px 0; border-radius:999px; background:#5a3a1e; font-size:14px; }
+  .chip.sel { background:#f2a541; color:#3a2410; font-weight:700; }
+  /* 7 paws */
+  .paws { display:flex; align-items:center; gap:3px; font-size:15px; }
+  .paws .dim { opacity:.22; }
+  .paws .end { font-size:18px; margin-left:2px; }
+  /* 8 grip */
+  .topbar { position:absolute; left:0; right:0; top:0; height:11%; background:rgba(247,231,200,.94); display:flex; align-items:center; justify-content:space-between; padding:0 10px; z-index:2; }
+  .grip { position:absolute; bottom:12px; width:58px; height:58px; border-radius:50%; background:#f2a541; color:#3a2410; font-size:30px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,.4); z-index:2; }
+  .grip.l { left:12px; } .grip.r { right:12px; }
+  /* 9 spotlight */
+  .dark { position:absolute; inset:0; background:#0f0803; }
+  .spot { position:absolute; inset:0; background:url('assets/enter-hero.jpg') center/cover no-repeat; }
+  .spotshade { position:absolute; inset:0; background:radial-gradient(ellipse at center, transparent 52%, rgba(5,2,0,.88) 100%); }
+  /* 10 drawer */
+  .drawer { position:absolute; left:0; right:0; top:0; height:44%; background:#fdf3df; color:#5a3a1e; border-radius:0 0 18px 18px; padding:12px 16px; z-index:2; box-shadow:0 10px 24px rgba(0,0,0,.45); }
+  .drawer h3 { font-size:14px; margin-bottom:9px; }
+  .drow { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; font-size:13.5px; }
+  .slider { flex:1; height:8px; border-radius:4px; background:#e4cf9f; margin:0 10px; position:relative; }
+  .slider::after { content:''; position:absolute; left:38%; top:50%; width:20px; height:20px; border-radius:50%; background:#f2a541; transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,.3); }
+  .seg { display:flex; background:#e4cf9f; border-radius:999px; overflow:hidden; font-size:12.5px; }
+  .seg span { padding:4px 10px; } .seg span.sel { background:#f2a541; font-weight:700; color:#3a2410; }
+  .foot { max-width:1100px; margin:24px auto 0; text-align:center; font-size:13px; opacity:.7; line-height:1.5; }
+</style>
+</head>
+<body>
+<h1>🐱 Meow Library — Reader Ideas</h1>
+<p class="sub">Ten looks for the reading screen. The storybook art inside each screen is our own art standing in for a real page. Tell Kakashi the numbers you like — they can be combined.</p>
+
+<div class="grid">
+
+  <div class="card">
+    <h2><span class="n">1</span>Theatre Mode</h2>
+    <p>The dashboard melts away — nothing on screen but the story. One tap brings the controls back.</p>
+    <div class="device"><div class="page"></div><div class="ghost"><i></i><i></i><i></i></div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class
+...[truncated 3881 chars]

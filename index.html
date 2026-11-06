@@ -131,7 +131,7 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
   transition: transform .3s ease; }
 .dash.away { transform: translateY(100%); }
 .mid { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px clamp(8px, 1.6vw, 16px); }
-/* cluster row: Home, Read Again, sound (speaker + switch), gear [+ portrait page pill] */
+/* cluster row: Home, Read Again, sound (speaker + switch) [+ portrait page pill] */
 .cluster { flex: 0 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px clamp(6px, 1.4vw, 12px); }
 .spk { flex: none; width: var(--btn); height: var(--btn); }
 .spk .waves { fill: none; stroke: #8a5426; stroke-width: 3.2; stroke-linecap: round; transition: opacity .2s; }
@@ -173,6 +173,18 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
 #dashTab svg { width: 26px; height: 26px; fill: none; stroke: #fff8ea; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s; }
 #dashTab.away { bottom: env(safe-area-inset-bottom); }
 #dashTab.away svg { transform: rotate(180deg); }
+/* Margin arrows (dashboard hidden only): drawn strictly inside the blank side margins beside the page art.
+   They are pictures only (pointer-events: none); the stage's tap handler turns the page for a tap anywhere in the strip,
+   so drag-to-flip starting in a margin works exactly as before. */
+.marg { position: absolute; top: 0; bottom: var(--dash); z-index: 1; display: grid; place-items: center; pointer-events: none;
+  opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility 0s .3s; }
+.marg.on { opacity: 1; visibility: visible; transition: opacity .3s ease; }
+#margL { left: 0; padding-left: env(safe-area-inset-left); }
+#margR { right: 0; padding-right: env(safe-area-inset-right); }
+.marg .icon { width: min(calc(100% - 12px), 132px); height: auto; aspect-ratio: 1;
+  filter: drop-shadow(0 4px 0 rgba(90, 45, 15, .4)) drop-shadow(0 6px 8px rgba(60, 30, 10, .25)); }
+.marg .fb { font-size: 44px; color: var(--wood-dk); }
+#margL .icon { transform: scaleX(-1); }
 @media (max-width: 640px) {   /* phone portrait: the paw trail gets its own line above the buttons */
   .prog { order: -1; flex-basis: 100%; max-width: none; }
 }
@@ -239,7 +251,7 @@ details label { display: block; padding: 6px 0; }
       <span class="round" data-icon="music"><span class="fb">♪</span></span>
       <button id="musicSw" class="switch" role="switch" aria-label="Music"></button>
     </div>
-    <button class="round gear" data-icon="gear" aria-label="Settings"><span class="fb">⚙</span></button>
+    <button id="gearBtn" class="round" data-icon="gear" aria-label="Settings"><span class="fb">⚙</span></button>
   </header>
   <main id="rows"></main>
 </div>
@@ -258,7 +270,6 @@ details label { display: block; padding: 6px 0; }
             <path class="waves" d="M30 18.5a7.5 7.5 0 0 1 0 11M34 14a13.5 13.5 0 0 1 0 20"/></svg>
           <button id="soundSw" class="switch" role="switch" aria-label="Page-turn sound"></button>
         </div>
-        <button class="chunk gear" data-icon="gear" aria-label="Settings"><span class="fb">⚙</span></button>
         <button id="viewBtn" class="pill" aria-label="Pages shown"><span>1 page</span><span>2 pages</span></button>
       </div>
       <div class="prog"><span id="pageNum"></span><div id="trail" class="trail" aria-hidden="true"></div>
@@ -266,6 +277,8 @@ details label { display: block; padding: 6px 0; }
     </div>
     <button id="nextBtn" class="chunk edge" data-icon="arrow" aria-label="Next"><span class="fb">▶</span></button>
   </nav>
+  <div id="margL" class="marg" data-icon="arrow" aria-hidden="true"><span class="fb">◀</span></div>
+  <div id="margR" class="marg" data-icon="arrow" aria-hidden="true"><span class="fb">▶</span></div>
   <button id="dashTab" aria-label="Hide buttons"><svg viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></svg></button>
   <div id="end" hidden>
     <button id="endHome" data-icon="home" aria-label="Home"><span class="fb">🏠</span></button>
@@ -462,8 +475,8 @@ function toggleFav(id) {
   save(); renderLibrary(); if (R.book) updateDash();
 }
 
-/* ---------- Grown-up gear: a plain tap opens Settings ---------- */
-document.querySelectorAll('.gear').forEach(g => g.onclick = () => openSettings());
+/* ---------- Grown-up gear (library top bar only): a plain tap opens Settings ---------- */
+$('#gearBtn').onclick = () => openSettings();
 
 /* ---------- Reader ---------- */
 const R = { cache: new Map() };
@@ -509,6 +522,7 @@ async function renderScreen(pages, mult = 1) {   // mult > 1 = extra-sharp copy 
   const s = Math.min(H / Math.max(...vps.map(v => v.height)), W / vps.reduce((a, v) => a + v.width, 0));
   const c = document.createElement('canvas'), ctx = c.getContext('2d');
   c.className = 'page'; c.width = Math.round(W * k); c.height = Math.round(H * k);
+  c.aspect = vps.reduce((a, v) => a + v.width, 0) / Math.max(...vps.map(v => v.height));   // page-art width / height
   let x = (W - s * vps.reduce((a, v) => a + v.width, 0)) / 2;
   for (let j = 0; j < pgs.length; j++) {
     const w = vps[j].width * s, h = vps[j].height * s, y = (H - h) / 2;
@@ -534,7 +548,7 @@ function getScreen(i) {   // cached {p: promise, c: canvas once ready}
   }
   return e;
 }
-function place(c) { stage.querySelectorAll('canvas.page').forEach(x => x !== c && x.remove()); stage.prepend(c); }
+function place(c) { stage.querySelectorAll('canvas.page').forEach(x => x !== c && x.remove()); stage.prepend(c); updateMargins(); }
 async function goTo(i) {
   resetZoom();
   R.i = i;
@@ -548,7 +562,7 @@ function settle() {   // after any landing: save progress, update number + paws,
   data.progress[R.book.id] = first; save();
   $('#pageNum').textContent = first;
   updateTrail();
-  getScreen(R.i - 1); getScreen(R.i + 1);
+  getScreen(R.i - 1); getScreen(R.i + 1); updateMargins();
   for (const k of R.cache.keys()) if (Math.abs(k - R.i) > 2) R.cache.delete(k);
 }
 async function ritual() {
@@ -630,6 +644,7 @@ const Z = { s: 1, x: 0, y: 0, hi: 0, ptrs: new Map(), pinch: null, pan: null, ta
 function applyZoom() {
   const c = curCanvas();
   if (c) c.style.transform = Z.s > 1 ? `translate(${Z.x}px, ${Z.y}px) scale(${Z.s})` : '';
+  updateMargins();
 }
 function zoomTo(s, x, y) {   // clamp scale to 1–3 and keep the page covering the stage
   const W = stage.clientWidth, H = stage.clientHeight;
@@ -725,11 +740,13 @@ stage.onpointerup = stage.onpointercancel = async e => {
     if (rest) Z.pan = { x0: rest.x, y0: rest.y, tx: Z.x, ty: Z.y };
     return;
   }
-  if (Z.tap && e.type === 'pointerup' && performance.now() - Z.tap.t < 300) Z.lastTap = Z.tap;
+  const tap = e.type === 'pointerup' && Z.tap, mdir = tap && !R.drag?.f ? marginDir(tap.x) : 0;
+  if (tap && !mdir && performance.now() - tap.t < 300) Z.lastTap = tap;
   Z.tap = null;
   if (Z.pan) { Z.pan = null; return; }
   const d = R.drag;
   R.drag = null;
+  if (mdir) { Z.lastTap = null; return turn(mdir); }   // a tap (or toddler slap) anywhere in a margin strip
   if (!d) return;
   const ok = e.type === 'pointerup' && d.dx > d.W * .35;
   if (d.f) { await animate(d.f, ok ? 1 : 0, 300); endFlip(d.f, ok); }
@@ -770,7 +787,7 @@ const layoutSoon = () => { clearTimeout(layoutTimer); layoutTimer = setTimeout((
 addEventListener('resize', layoutSoon);
 addEventListener('orientationchange', () => { layoutSoon(); setTimeout(layoutSoon, 450); });   // iOS reports the new size late
 window.visualViewport?.addEventListener('resize', layoutSoon);
-new ResizeObserver(layoutSoon).observe(stage);
+new ResizeObserver(() => { layoutSoon(); updateMargins(); }).observe(stage);
 
 /* Dashboard hide/show (session only, starts shown). The stage grows into the freed space. */
 let dashAway = false;
@@ -783,8 +800,24 @@ $('#dashTab').onclick = () => {
   dashAway = !dashAway;
   dash.classList.toggle('away', dashAway); $('#dashTab').classList.toggle('away', dashAway);
   $('#dashTab').setAttribute('aria-label', dashAway ? 'Show buttons' : 'Hide buttons');
-  syncDash();
+  syncDash(); updateMargins();
 };
+
+/* Margin arrows: shown only while the dashboard is hidden, at 1x zoom, on a side whose blank margin
+   (stage minus the fitted page art, measured clear of the safe area) is at least 64px; prev never on the first screen. */
+const MARGIN_MIN = 64, margL = $('#margL'), margR = $('#margR');
+function margins() {   // {l, r} strip widths in stage px, or null when margin arrows are off
+  const c = curCanvas();
+  if (!dashAway || !R.screens || !c?.aspect || Z.s > 1) return null;
+  const W = stage.clientWidth, art = Math.min(W, stage.clientHeight * c.aspect), m = (W - art) / 2;
+  const usable = el => m - (parseFloat(getComputedStyle(el).paddingLeft) + parseFloat(getComputedStyle(el).paddingRight));
+  return { l: R.i > 0 && usable(margL) >= MARGIN_MIN ? m : 0, r: usable(margR) >= MARGIN_MIN ? m : 0 };
+}
+function updateMargins() {
+  const m = margins();
+  [[margL, m?.l], [margR, m?.r]].forEach(([el, w]) => { el.classList.toggle('on', !!w); if (w) el.style.width = w + 'px'; });
+}
+const marginDir = x => { const m = margins(); return !m ? 0 : m.l && x < m.l ? -1 : m.r && x > stage.clientWidth - m.r ? 1 : 0; };
 
 $('#homeBtn').onclick = $('#endHome').onclick = () => { closeReader(); goLibrary(); };
 $('#againBtn').onclick = ritual;
@@ -798,13 +831,8 @@ $('#viewBtn').onclick = () => { data.settings.twoPage = !data.settings.twoPage; 
 
 /* ---------- Settings ---------- */
 let importMsg = '';
-function openSettings() { show('settings'); $('#reader').hidden = !R.book; $('#library').hidden = !!R.book; renderSettings(); }
-$('#closeSettings').onclick = () => {
-  $('#settings').hidden = true;
-  if (!R.book) return goLibrary();
-  if (!books.includes(R.book)) { closeReader(); return goLibrary(); }
-  relayout(true);
-};
+function openSettings() { show('settings'); $('#library').hidden = false; renderSettings(); }   // over the library
+$('#closeSettings').onclick = goLibrary;
 const seg = (act, cur, opts) => opts.map(([v, label]) =>
   `<button class="btn ${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${label}</button>`).join(' ');
 const toggle = (act, on, label, disabled) =>

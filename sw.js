@@ -1,5 +1,5 @@
 // Bump CACHE when shipping changes so installed iPads pick up the new files.
-const CACHE = 'meow-library-v4';
+const CACHE = 'meow-library-v5';
 const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
 const PRECACHE = ['./', 'index.html', 'assets/enter-hero.jpg', 'assets/library-background.jpg',
   'assets/congrats-cat.jpg', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest',
@@ -8,6 +8,8 @@ const PRECACHE = ['./', 'index.html', 'assets/enter-hero.jpg', 'assets/library-b
 self.addEventListener('install', e => e.waitUntil(
   caches.open(CACHE)
     .then(c => c.addAll(PRECACHE)
+      // The real page-flip sound, when assets/sounds/page-flip.mp3 is in the repo. Non-fatal while it is absent.
+      .then(() => c.add('assets/sounds/page-flip.mp3').catch(() => {}))
       // PDF.js too, so the reader works offline even if no book was opened online. Non-fatal.
       .then(() => c.addAll([CDN + 'pdf.min.js', CDN + 'pdf.worker.min.js']).catch(() => {})))
     .then(() => self.skipWaiting())));

@@ -67,7 +67,7 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
   box-shadow: 0 3px 8px rgba(90, 52, 24, .2); }
 .round.has-icon { background: none; box-shadow: none; }
 .round.has-icon .icon { filter: drop-shadow(0 3px 4px rgba(90, 52, 24, .3)); }
-.musicCtl { display: flex; align-items: center; gap: clamp(4px, 1vw, 8px); flex: none; cursor: pointer; }
+.musicCtl, .soundCtl { display: flex; align-items: center; gap: clamp(4px, 1vw, 8px); flex: none; cursor: pointer; }
 
 #rows { flex: 1; overflow-x: hidden; overflow-y: auto; scroll-snap-type: y proximity; padding-bottom: 40px;
   /* Peek rule: ~1.55 rows fit in the visible area, so the next row's title and tile tops always show.
@@ -130,20 +130,25 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
   border-top: 4px solid #f0c48e; box-shadow: 0 -2px 0 var(--wood-dk) inset, 0 -6px 18px rgba(90, 52, 24, .3);
   transition: transform .3s ease; }
 .dash.away { transform: translateY(100%); }
-.mid { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px clamp(6px, 1.4vw, 14px); }
+.mid { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px clamp(8px, 1.6vw, 16px); }
+/* cluster row: Home, Read Again, sound (speaker + switch), gear [+ portrait page pill] */
+.cluster { flex: 0 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px clamp(6px, 1.4vw, 12px); }
+.spk { flex: none; width: var(--btn); height: var(--btn); }
+.spk .waves { fill: none; stroke: #8a5426; stroke-width: 3.2; stroke-linecap: round; transition: opacity .2s; }
+.soundCtl.off .waves { opacity: .2; }
 .chunk { flex: none; width: var(--btn); height: var(--btn); padding: 0; border-radius: 18px; display: grid; place-items: center;
   font-size: calc(var(--btn) * .5); background: linear-gradient(#fffaf0, #f6dcb2);
   box-shadow: 0 4px 0 var(--wood-dk), 0 7px 12px rgba(60, 30, 10, .35); }
 .chunk:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--wood-dk), 0 3px 6px rgba(60, 30, 10, .3); }
 .mid .chunk.has-icon { background: none; box-shadow: none; }
-.mid .chunk.has-icon .icon { filter: drop-shadow(0 4px 0 rgba(90, 45, 15, .55)) drop-shadow(0 6px 6px rgba(60, 30, 10, .3)); }
+.mid .chunk.has-icon .icon, .spk { filter: drop-shadow(0 4px 0 rgba(90, 45, 15, .55)) drop-shadow(0 6px 6px rgba(60, 30, 10, .3)); }
 .edge { flex: 0 0 clamp(64px, 13vw, 132px); width: auto; height: auto; min-height: var(--btn); border-radius: 22px; }
 .edge .icon { width: min(80%, calc(var(--btn) * 1.1)); height: auto; aspect-ratio: 1; }
 #prevBtn .icon { transform: scaleX(-1); }
 .edge.has-icon { background: rgba(255, 240, 215, .22); box-shadow: inset 0 0 0 2px rgba(255, 240, 215, .35); }
 .edge.has-icon .icon { filter: drop-shadow(0 4px 0 rgba(90, 45, 15, .55)) drop-shadow(0 6px 6px rgba(60, 30, 10, .3)); }
 #favBtn:not(.on) .icon { filter: grayscale(1) opacity(.45); }
-.prog { display: flex; align-items: center; gap: clamp(4px, 1vw, 8px); min-width: 0; flex: 1 1 auto; max-width: 440px; justify-content: center; }
+.prog { display: flex; align-items: center; gap: clamp(4px, 1vw, 8px); min-width: 0; flex: 1 1 160px; max-width: 480px; justify-content: center; }
 #pageNum { flex: none; min-width: 1.4em; text-align: right; font-size: clamp(14px, 2.6vmin, 19px); font-weight: 900; color: #fff8ea;
   text-shadow: 0 1px 0 var(--wood-dk), 0 0 6px rgba(90, 45, 15, .6); }
 .trail { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 2px;
@@ -160,7 +165,9 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
   box-shadow: 0 3px 0 var(--wood-dk); }
 .pill span { padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
 .pill span.on { background: var(--orange); color: #fff; }
-#dashTab { position: absolute; left: 50%; bottom: var(--dashH); z-index: 3; width: 76px; height: 28px; padding: 0; transform: translateX(-50%);
+/* hide/show tab: rides on the bar's right end (over the Next edge button, clear of the page centre) */
+#dashTab { position: absolute; right: max(clamp(6px, 1.2vmin, 10px), env(safe-area-inset-right)); bottom: var(--dashH); z-index: 3;
+  width: clamp(64px, 13vw, 132px); max-width: 96px; height: 28px; padding: 0;
   border-radius: 14px 14px 0 0; background: linear-gradient(var(--wood-hi), var(--wood)); box-shadow: 0 -3px 8px rgba(90, 52, 24, .25);
   display: grid; place-items: center; transition: bottom .3s ease; }
 #dashTab svg { width: 26px; height: 26px; fill: none; stroke: #fff8ea; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s; }
@@ -172,15 +179,16 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
 #end { position: absolute; inset: 0; z-index: 5; background: url(assets/congrats-cat.jpg) center / cover;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: clamp(12px, 3vmin, 22px);
   padding: 0 var(--gut) max(clamp(16px, 4vmin, 32px), env(safe-area-inset-bottom)); }
-#end button { display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; font-weight: 900;
-  color: #fff; box-shadow: 0 6px 0 rgba(0, 0, 0, .2); }
-#againBtn { min-height: clamp(64px, 12vmin, 96px); padding: 0 clamp(28px, 6vmin, 48px); font-size: clamp(26px, 5vmin, 40px); background: var(--orange); }
-#nextStory { min-height: clamp(52px, 9vmin, 72px); padding: 0 clamp(20px, 4vmin, 32px); font-size: clamp(18px, 3.4vmin, 26px); background: #4f9bd9; }
-#end .ic { width: 1.4em; height: 1.4em; display: grid; place-items: center; }
+/* One button height and one icon size for all three end-screen buttons. */
+#end { --endH: clamp(80px, 15vmin, 112px); --endIc: calc(var(--endH) - 14px); }
+#end button { flex: none; height: var(--endH); display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 8px;
+  border-radius: 999px; font-weight: 900; color: #fff; box-shadow: 0 6px 0 rgba(0, 0, 0, .2); }
+#end .ic, #endHome .icon { flex: none; width: var(--endIc); height: var(--endIc); display: grid; place-items: center; }
+#againBtn { padding-right: clamp(24px, 5vmin, 44px); font-size: clamp(26px, 5vmin, 40px); background: var(--orange); }
 #againBtn .ic:not(.has-icon) { display: none; }
-#endHome { width: clamp(56px, 10vmin, 72px); height: clamp(56px, 10vmin, 72px); padding: 0; font-size: clamp(26px, 5vmin, 34px);
-  background: #fff7e8 !important; color: var(--brown) !important; }
-#endHome.has-icon { background: none !important; box-shadow: none !important; }
+#againBtn:has(.ic:not(.has-icon)) { padding-left: clamp(24px, 5vmin, 44px); }
+#nextStory { padding-left: clamp(22px, 4.4vmin, 36px); font-size: clamp(20px, 3.8vmin, 30px); background: #4f9bd9; }
+#end #endHome { width: var(--endH); padding: 0; font-size: calc(var(--endH) * .45); background: #fff7e8; color: var(--brown); }
 
 /* Settings */
 #settings { z-index: 10; background: var(--cream); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
@@ -241,13 +249,20 @@ details label { display: block; padding: 6px 0; }
   <nav id="dash" class="dash">
     <button id="prevBtn" class="chunk edge" data-icon="arrow" aria-label="Back"><span class="fb">◀</span></button>
     <div class="mid">
-      <button id="homeBtn" class="chunk" data-icon="home" aria-label="Home"><span class="fb">🏠</span></button>
-      <button id="againDash" class="chunk" data-icon="readagain" aria-label="Read again"><span class="fb">↺</span></button>
-      <div class="prog"><span id="pageNum"></span><div id="trail" class="trail" aria-hidden="true"></div></div>
-      <button id="favBtn" class="chunk" data-icon="star" aria-label="Favourite"><span class="fb"></span></button>
-      <button id="soundSw" class="switch" role="switch" aria-label="Page-turn sound"></button>
-      <button id="viewBtn" class="pill" aria-label="Pages shown"><span>1 page</span><span>2 pages</span></button>
-      <button class="chunk gear" data-icon="gear" aria-label="Settings"><span class="fb">⚙</span></button>
+      <div class="cluster">
+        <button id="homeBtn" class="chunk" data-icon="home" aria-label="Home"><span class="fb">🏠</span></button>
+        <button id="againDash" class="chunk" data-icon="readagain" aria-label="Read again"><span class="fb">↺</span></button>
+        <div id="soundCtl" class="soundCtl">
+          <svg class="spk" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="11" fill="#fff4de" stroke="#f0c48e" stroke-width="2"/>
+            <path d="M10 19h6l9-7.5v25L16 29h-6z" fill="#f0892a" stroke="#8a5426" stroke-width="2.4" stroke-linejoin="round"/>
+            <path class="waves" d="M30 18.5a7.5 7.5 0 0 1 0 11M34 14a13.5 13.5 0 0 1 0 20"/></svg>
+          <button id="soundSw" class="switch" role="switch" aria-label="Page-turn sound"></button>
+        </div>
+        <button class="chunk gear" data-icon="gear" aria-label="Settings"><span class="fb">⚙</span></button>
+        <button id="viewBtn" class="pill" aria-label="Pages shown"><span>1 page</span><span>2 pages</span></button>
+      </div>
+      <div class="prog"><span id="pageNum"></span><div id="trail" class="trail" aria-hidden="true"></div>
+        <button id="favBtn" class="chunk" data-icon="star" aria-label="Favourite"><span class="fb"></span></button></div>
     </div>
     <button id="nextBtn" class="chunk edge" data-icon="arrow" aria-label="Next"><span class="fb">▶</span></button>
   </nav>
@@ -343,10 +358,21 @@ function show(id) { document.querySelectorAll('.screen').forEach(s => s.hidden =
 let ac, music = null;
 function audioCtx() {
   try { ac ||= new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch {}
+  if (ac && flipRaw) {   // decode the page-flip recording once an AudioContext exists
+    const raw = flipRaw; flipRaw = null;
+    ac.decodeAudioData(raw, b => { flipBuf = b; }, () => {});
+  }
   return ac;
 }
-function whoosh() {   // soft paper turn: a short band-passed noise sweep
+// Page-turn sound: plays assets/sounds/page-flip.mp3 when the file exists, else the synthesized whoosh.
+// Both go through the same AudioContext, so the pageSound switch and device volume behave the same.
+let flipRaw = null, flipBuf = null;
+fetch('assets/sounds/page-flip.mp3').then(r => r.ok ? r.arrayBuffer() : null)
+  .then(b => { if (b) { flipRaw = b; if (ac) audioCtx(); } }).catch(() => {});
+function flipSound() {
   if (!data.settings.pageSound || !audioCtx()) return;
+  if (flipBuf) { const src = ac.createBufferSource(); src.buffer = flipBuf; src.connect(ac.destination); src.start(); return; }
+  // fallback: soft paper turn, a short band-passed noise sweep
   const t = ac.currentTime, len = ac.sampleRate * .35, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
   const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
@@ -582,7 +608,7 @@ function animate(f, to, ms = 450) {
 }
 function endFlip(f, done) {
   f.el.remove(); R.busy = false;
-  if (done) { R.i += f.dir; whoosh(); settle(); } else place(f.out);
+  if (done) { R.i += f.dir; flipSound(); settle(); } else place(f.out);
   if (R.layoutPending) relayout(true);
 }
 async function turn(dir) {
@@ -713,7 +739,7 @@ stage.onpointerup = stage.onpointercancel = async e => {
 function finish() {
   clearRitual(); resetZoom();
   data.finished[R.book.id] = today(); delete data.progress[R.book.id]; save();
-  whoosh();
+  flipSound();
   $('#nextStory').hidden = !books[num(R.book)];
   $('#end').hidden = false;
 }
@@ -722,6 +748,7 @@ function updateDash() {
   $('#favBtn').classList.toggle('on', fav);
   $('#favBtn').querySelector('.fb').textContent = fav ? '⭐' : '☆';
   setSwitch($('#soundSw'), data.settings.pageSound);
+  $('#soundCtl').classList.toggle('off', !data.settings.pageSound);
   $('#viewBtn').hidden = !(modeOf(R.book) === 'single' && innerHeight > innerWidth);
   $('#viewBtn').children[0].classList.toggle('on', !two);
   $('#viewBtn').children[1].classList.toggle('on', two);
@@ -766,7 +793,7 @@ $('#nextStory').onclick = () => { const b = books[num(R.book)]; closeReader(); o
 $('#prevBtn').onclick = () => turn(-1);
 $('#nextBtn').onclick = () => turn(1);
 $('#favBtn').onclick = () => toggleFav(R.book.id);
-$('#soundSw').onclick = () => { data.settings.pageSound = !data.settings.pageSound; save(); updateDash(); };
+$('#soundCtl').onclick = () => { data.settings.pageSound = !data.settings.pageSound; save(); updateDash(); };
 $('#viewBtn').onclick = () => { data.settings.twoPage = !data.settings.twoPage; save(); relayout(true); };
 
 /* ---------- Settings ---------- */

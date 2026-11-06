@@ -1,0 +1,14 @@
+{
+  "name": "Meow Library",
+  "short_name": "Meow Library",
+  "description": "A cosy picture-book library and reader.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fdf0d5",
+  "theme_color": "#fdf0d5",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

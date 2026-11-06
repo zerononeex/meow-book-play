@@ -2,17 +2,678 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Meow Library</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#fff8ee;color:#333;text-align:center} .cat{font-size:4rem}</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="A cosy picture-book library and reader for little ones.">
+<meta name="theme-color" content="#fdf0d5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meow Library">
+<style>
+:root {
+  --cream: #fdf0d5; --brown: #5a3418; --orange: #f0892a; --green: #3fa34d;
+  --font: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", system-ui, sans-serif;
+  --bar: 76px; --dash: 84px;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--cream); color: var(--brown);
+  font-family: var(--font); touch-action: manipulation; -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none; overscroll-behavior: none; }
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+input, select { font: inherit; -webkit-user-select: text; user-select: text; }
+.screen { position: fixed; inset: 0; }
+
+/* Enter */
+#enter { background: url(assets/enter-hero.jpg) center / cover; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4vh; padding-bottom: 14vh; }
+#enter h1 { margin: 0; font-size: clamp(48px, 9vw, 104px); font-weight: 900; letter-spacing: .5px;
+  text-shadow: 0 4px 0 #fff, 0 8px 18px rgba(90, 52, 24, .25); }
+#enterBtn { min-height: 96px; min-width: 300px; padding: 0 56px; border-radius: 999px; font-size: 44px; font-weight: 900;
+  background: var(--orange); color: #fff; box-shadow: 0 8px 0 #b85f12, 0 14px 28px rgba(90, 52, 24, .3); }
+#enterBtn:active { transform: translateY(6px); box-shadow: 0 2px 0 #b85f12; }
+
+/* Library */
+#library { background: url(assets/library-background.jpg) center / cover; display: flex; flex-direction: column; }
+.topbar { flex: none; height: var(--bar); display: flex; align-items: center; gap: 14px;
+  padding: 0 max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left)); }
+.brand { font-size: 28px; font-weight: 900; white-space: nowrap; }
+#search { flex: 1; min-width: 0; height: 52px; padding: 0 22px; border-radius: 999px; border: 3px solid #e8c48f;
+  background: rgba(255, 255, 255, .92); font-size: 20px; color: var(--brown); outline: none; }
+.round { width: 56px; height: 56px; flex: none; border-radius: 50%; font-size: 28px; background: rgba(255, 255, 255, .92);
+  box-shadow: 0 3px 8px rgba(90, 52, 24, .2); }
+#musicBtn.off { opacity: .45; }
+.gear.holding { transition: transform 2s linear, background-color 2s; transform: rotate(270deg) scale(1.2); background: #f6c56b; }
+.gear.wiggle { animation: wiggle .35s; }
+@keyframes wiggle { 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+
+#rows { flex: 1; overflow-y: auto; scroll-snap-type: y proximity; padding-bottom: 40px;
+  /* Peek rule: ~1.55 rows fit in the visible area, so the next row's title and tile tops always show. */
+  --h: min(calc((100vh - var(--bar)) / 1.55 - 92px), 46vw);
+  --h: min(calc((100dvh - var(--bar)) / 1.55 - 92px), 46vw); }
+.row { scroll-snap-align: start; padding-top: 6px; }
+.row h2, .grid-title { margin: 0 0 6px; padding: 0 28px; font-size: 28px; line-height: 36px; font-weight: 900; }
+.strip { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 28px;
+  padding: 4px 28px 10px; scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+.tile { flex: none; scroll-snap-align: start; cursor: pointer; width: calc(var(--h) * .75); }
+.shape-square .tile { width: var(--h); }
+.cover { position: relative; height: var(--h); border-radius: 18px; overflow: hidden; background: #fff8ea;
+  box-shadow: 0 6px 16px rgba(90, 52, 24, .28); }
+.cover img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.shape-square .cover img { object-fit: cover; }
+.cover span, .cover .fav { position: absolute; display: grid; place-items: center; border-radius: 50%;
+  font-weight: 900; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
+.num { top: 8px; left: 8px; min-width: 44px; height: 44px; padding: 0 8px; border-radius: 22px !important;
+  background: var(--orange); color: #fff; font-size: 24px; }
+.done { right: 8px; bottom: 8px; width: 44px; height: 44px; background: var(--green); color: #fff; font-size: 28px; }
+.today { left: 8px; bottom: 8px; width: 44px; height: 44px; background: #fff; font-size: 26px; }
+.fav { top: 6px; right: 6px; width: 52px; height: 52px; background: rgba(255, 255, 255, .92); font-size: 30px; color: #c9a777; }
+.name { margin-top: 8px; font-size: 19px; font-weight: 800; line-height: 1.2; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: center; }
+.grid { --h: min(calc((100vh - var(--bar)) / 2.4), 30vw); display: flex; flex-wrap: wrap; gap: 22px 20px; padding: 4px 28px 20px; }
+.grid.shelf { gap: 0; padding: 12px 20px; }
+.shelf .slot { padding: 14px 14px 30px;
+  background: linear-gradient(transparent calc(100% - 24px), #c8874b calc(100% - 24px), #a5652f calc(100% - 8px), rgba(90, 52, 24, .25) calc(100% - 8px), transparent); }
+.msg { margin: 12vh auto 0; max-width: 560px; padding: 28px 32px; border-radius: 28px; background: rgba(255, 250, 240, .92);
+  font-size: 26px; font-weight: 800; text-align: center; line-height: 1.4; }
+
+/* Reader */
+#reader { background: #f3e3c3; touch-action: none; }
+#stage { position: absolute; inset: 0 0 var(--dash) 0; overflow: hidden; }
+#stage canvas.page { position: absolute; inset: 0; width: 100%; height: 100%; }
+.flip { position: absolute; inset: 0; pointer-events: none; perspective: 2400px; }
+.half { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; }
+.half canvas { position: absolute; top: 0; width: 200%; height: 100%; }
+.half.L, .half.L canvas { left: 0; }
+.half.R, .half.R canvas { right: 0; }
+.leaf { position: absolute; top: 0; bottom: 0; width: 50%; transform-style: preserve-3d; }
+.fwd .leaf { left: 50%; transform-origin: left center; }
+.back .leaf { left: 0; transform-origin: right center; }
+.leaf .half { left: 0; right: 0; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.leaf .half + .half { transform: rotateY(180deg); }
+.shade { position: absolute; inset: 0; opacity: var(--s, 0); }
+.half.R .shade { background: linear-gradient(to right, rgba(70, 40, 10, .45), transparent 70%); }
+.half.L .shade { background: linear-gradient(to left, rgba(70, 40, 10, .45), transparent 70%); }
+.dash { position: absolute; left: 0; right: 0; bottom: 0; height: var(--dash); padding: 0 12px env(safe-area-inset-bottom);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(255, 236, 200, .88); box-shadow: 0 -4px 16px rgba(90, 52, 24, .18); }
+.dash button { min-width: 60px; height: 60px; border-radius: 18px; background: #fff7e8; font-size: 30px;
+  box-shadow: 0 3px 0 #e2c08c; }
+.dash .gear { border-radius: 50%; }
+#pageNum { min-width: 72px; text-align: center; font-size: 34px; font-weight: 900; }
+#viewBtn { font-size: 22px; font-weight: 900; padding: 0 12px; }
+#viewBtn b { color: var(--orange); }
+#end { position: absolute; inset: 0; z-index: 5; background: url(assets/congrats-cat.jpg) center / cover;
+  display: flex; align-items: flex-end; justify-content: center; gap: 22px; padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+#end button { border-radius: 999px; font-weight: 900; color: #fff; box-shadow: 0 6px 0 rgba(0, 0, 0, .2); }
+#againBtn { min-height: 96px; padding: 0 48px; font-size: 40px; background: var(--orange); }
+#nextStory { min-height: 72px; padding: 0 32px; font-size: 26px; background: #4f9bd9; }
+#endHome { min-width: 72px; min-height: 72px; font-size: 34px; background: #fff7e8 !important; }
+
+/* Settings */
+#settings { z-index: 10; background: var(--cream); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sbar { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; background: #f6dfb4; }
+.sbar h2 { margin: 0; font-size: 28px; }
+#settingsBody { max-width: 860px; margin: 0 auto; padding: 8px 20px 60px; font-size: 18px; }
+#settingsBody section { margin: 18px 0; padding: 16px 20px; border-radius: 20px; background: #fff8ea; }
+#settingsBody h3 { margin: 0 0 12px; font-size: 22px; }
+.btn { min-height: 48px; padding: 0 18px; border-radius: 14px; background: #f6dfb4; font-weight: 800; }
+.btn.on { background: var(--orange); color: #fff; }
+.btn.danger { background: #e45b4f; color: #fff; }
+.item { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.item img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+.item input[type=text] { flex: 1; min-width: 0; height: 46px; padding: 0 12px; border-radius: 12px; border: 2px solid #e8c48f; }
+.item select { height: 46px; border-radius: 12px; border: 2px solid #e8c48f; background: #fff; }
+.cat { border-top: 2px dashed #ecd3a8; padding-top: 6px; }
+details label { display: block; padding: 6px 0; }
+.note { font-size: 15px; opacity: .75; }
+</style>
 </head>
 <body>
-<main>
-<div class="cat">🐱</div>
-<h1>Meow Library</h1>
-<p>Coming soon — under construction.</p>
-</main>
+
+<div id="enter" class="screen">
+  <h1>Meow Library</h1>
+  <button id="enterBtn">ENTER</button>
+</div>
+
+<div id="library" class="screen" hidden>
+  <header class="topbar">
+    <div class="brand">🐱 Meow Library</div>
+    <input id="search" type="search" placeholder="Search a story or number…" autocomplete="off" enterkeyhint="search">
+    <button id="musicBtn" class="round" hidden aria-label="Music">🎵</button>
+    <button class="round gear" aria-label="Settings (hold)">⚙</button>
+  </header>
+  <main id="rows"></main>
+</div>
+
+<div id="reader" class="screen" hidden>
+  <div id="stage"></div>
+  <nav class="dash">
+    <button id="homeBtn" aria-label="Home">🏠</button>
+    <button id="restartBtn" aria-label="Start over">↺</button>
+    <button id="prevBtn" aria-label="Back">◀</button>
+    <span id="pageNum"></span>
+    <button id="nextBtn" aria-label="Next">▶</button>
+    <button id="favBtn" aria-label="Favourite"></button>
+    <button id="soundBtn" aria-label="Page sound"></button>
+    <button id="viewBtn" aria-label="One or two pages"></button>
+    <button class="gear" aria-label="Settings (hold)">⚙</button>
+  </nav>
+  <div id="end" hidden>
+    <button id="endHome" aria-label="Home">🏠</button>
+    <button id="againBtn">READ AGAIN</button>
+    <button id="nextStory">NEXT STORY ▶</button>
+  </div>
+</div>
+
+<div id="settings" class="screen" hidden>
+  <div class="sbar"><h2>⚙ Grown-up settings</h2><button id="closeSettings" class="btn on">Done</button></div>
+  <div id="settingsBody"></div>
+</div>
+<input id="fileIn" type="file" accept="application/pdf" multiple hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+'use strict';
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const byTitle = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
+
+/* ---------- On-device data (shape is stable: migrate before changing) ---------- */
+const KEY = 'meow-library-data-v1';
+let data = {};
+try { data = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+data = { favourites: [], progress: {}, finished: {}, categories: [], ...data };
+data.settings = { layout: 'E', tile: 'book', pageSound: true, music: true, twoPage: false, ...data.settings };
+const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+let dbp;
+function idb(method, arg) {
+  dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open('meow-library-db', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('books', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return dbp.then(db => new Promise((res, rej) => {
+    const r = db.transaction('books', method === 'getAll' ? 'readonly' : 'readwrite').objectStore('books')[method](arg);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+}
+
+let books = [];            // IndexedDB records, kept sorted alphabetically
+const thumbs = new Map();  // id -> cover object URL
+const sortBooks = () => books.sort((a, b) => byTitle(a.title, b.title));
+const num = b => books.indexOf(b) + 1;
+function addBook(rec) { books.push(rec); thumbs.set(rec.id, URL.createObjectURL(rec.thumbBlob)); }
+function forget(id) {
+  data.favourites = data.favourites.filter(x => x !== id);
+  delete data.progress[id]; delete data.finished[id];
+  data.categories.forEach(c => c.books = c.books.filter(x => x !== id));
+  URL.revokeObjectURL(thumbs.get(id)); thumbs.delete(id);
+  books = books.filter(b => b.id !== id);
+  save();
+}
+
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id); }
+
+/* ---------- Sound ---------- */
+let ac, music = null;
+function audioCtx() {
+  try { ac ||= new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch {}
+  return ac;
+}
+function whoosh() {   // soft paper turn: a short band-passed noise sweep
+  if (!data.settings.pageSound || !audioCtx()) return;
+  const t = ac.currentTime, len = ac.sampleRate * .35, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = buf; f.type = 'bandpass'; f.Q.value = .8;
+  f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(3200, t + .3);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.3, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + .35);
+  src.connect(f).connect(g).connect(ac.destination); src.start();
+}
+const playMusic = () => { if (music && data.settings.music && !$('#library').hidden) music.play().catch(() => {}); };
+const pauseMusic = () => music?.pause();
+function updateMusicBtn() { $('#musicBtn').classList.toggle('off', !data.settings.music); }
+// Music slot: only appears once assets/music/library.mp3 exists.
+fetch('assets/music/library.mp3', { method: 'HEAD' }).then(r => {
+  if (!r.ok) return;
+  music = new Audio('assets/music/library.mp3'); music.loop = true;
+  $('#musicBtn').hidden = false; updateMusicBtn(); playMusic();
+}).catch(() => {});
+$('#musicBtn').onclick = () => {
+  data.settings.music = !data.settings.music; save(); updateMusicBtn();
+  data.settings.music ? playMusic() : pauseMusic();
+};
+
+/* ---------- Enter + Library ---------- */
+$('#enterBtn').onclick = () => { audioCtx(); goLibrary(); };
+function goLibrary() { show('library'); renderLibrary(); playMusic(); }
+$('#search').oninput = renderLibrary;
+
+function tile(b) {
+  const el = document.createElement('div'), fin = data.finished[b.id], fav = data.favourites.includes(b.id);
+  el.className = 'tile';
+  el.innerHTML = `<div class="cover"><img alt="" src="${thumbs.get(b.id)}"><span class="num">${num(b)}</span>` +
+    (fin ? '<span class="done">✓</span>' : '') + (fin === today() ? '<span class="today">⭐</span>' : '') +
+    `<button class="fav" aria-label="Favourite">${fav ? '⭐' : '☆'}</button></div><div class="name">${esc(b.title)}</div>`;
+  el.onclick = e => e.target.closest('.fav') ? toggleFav(b.id) : openBook(b);
+  return el;
+}
+const seriesOf = t => t.match(/^(.+?)(?::| — | - )/)?.[1].trim();
+function seriesRows() {
+  const m = new Map();
+  for (const b of books) {
+    const s = seriesOf(b.title);
+    if (!s) continue;
+    const k = s.toLowerCase();
+    if (!m.has(k)) m.set(k, [s, []]);
+    m.get(k)[1].push(b);
+  }
+  return [...m.values()].filter(([, list]) => list.length > 1).sort((a, b) => byTitle(a[0], b[0]));
+}
+function renderLibrary() {
+  const rows = $('#rows'), top = rows.scrollTop, q = $('#search').value.trim().toLowerCase();
+  rows.className = 'shape-' + data.settings.tile;
+  rows.innerHTML = '';
+  const section = (title, list, cls) => {
+    const s = document.createElement('section'), box = document.createElement('div');
+    s.className = cls === 'strip' ? 'row' : '';
+    if (title) s.innerHTML = `<h2 class="${cls === 'strip' ? '' : 'grid-title'}">${esc(title)}</h2>`;
+    box.className = cls;
+    list.forEach(b => {
+      if (cls !== 'grid shelf') return box.append(tile(b));
+      const slot = document.createElement('div');
+      slot.className = 'slot'; slot.append(tile(b)); box.append(slot);
+    });
+    s.append(box); rows.append(s);
+  };
+  if (!books.length) {
+    rows.innerHTML = '<p class="msg">No books yet! A grown-up can add stories: hold the ⚙ button for 2 seconds, then tap Add Books.</p>';
+  } else if (q) {
+    const hits = books.filter(b => b.title.toLowerCase().includes(q) || String(num(b)) === q);
+    section('Search results', hits, 'grid');
+    if (!hits.length) rows.insertAdjacentHTML('beforeend', '<p class="msg">No story found. Try another word or number!</p>');
+  } else if (data.settings.layout === 'A') {
+    section('', books, 'grid shelf');
+  } else {
+    const pick = ids => books.filter(b => ids.includes(b.id));
+    const add = (title, list) => list.length && section(title, list, 'strip');
+    add('Favourites', pick(data.favourites));
+    data.categories.forEach(c => add(c.name, pick(c.books)));
+    seriesRows().forEach(([name, list]) => add(name, list));
+    section('All Books', books, 'strip');
+  }
+  rows.scrollTop = top;
+}
+function toggleFav(id) {
+  const i = data.favourites.indexOf(id);
+  i < 0 ? data.favourites.push(id) : data.favourites.splice(i, 1);
+  save(); renderLibrary(); if (R.book) updateDash();
+}
+
+/* ---------- Grown-up gear: 2-second hold ---------- */
+document.querySelectorAll('.gear').forEach(g => {
+  let timer = null;
+  g.onpointerdown = e => {
+    e.preventDefault();
+    g.classList.remove('wiggle'); g.classList.add('holding');
+    timer = setTimeout(() => { timer = null; g.classList.remove('holding'); openSettings(); }, 2000);
+  };
+  g.onpointerup = g.onpointerleave = g.onpointercancel = () => {
+    if (!timer) return;
+    clearTimeout(timer); timer = null;
+    g.classList.remove('holding'); void g.offsetWidth; g.classList.add('wiggle');
+  };
+  g.oncontextmenu = e => e.preventDefault();
+});
+
+/* ---------- Reader ---------- */
+const R = { cache: new Map() };
+const stage = $('#stage');
+const curCanvas = () => stage.querySelector('canvas.page');
+let wake = null;
+async function lockWake() { try { wake = await navigator.wakeLock.request('screen'); } catch {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && R.book) lockWake(); });
+['dblclick', 'gesturestart'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+
+async function openBook(b) {
+  pauseMusic(); show('reader'); $('#end').hidden = true; stage.innerHTML = '';
+  R.book = b; R.url = URL.createObjectURL(b.fileBlob);
+  updateDash(); lockWake();
+  R.pdf = await pdfjsLib.getDocument(R.url).promise;
+  if (R.book !== b) return;
+  computeScreens();
+  const saved = data.progress[b.id] || 1;
+  saved > 1 ? goTo(screenOf(saved)) : ritual();
+}
+function closeReader() {
+  clearRitual(); R.book = null; R.busy = false; R.drag = null; R.cache.clear(); stage.innerHTML = '';
+  R.pdf?.destroy(); R.pdf = null; URL.revokeObjectURL(R.url);
+  try { wake?.release(); } catch {}
+  wake = null;
+}
+function computeScreens() {
+  const n = R.book.pageCount, pair = R.book.mode === 'single' && (innerWidth > innerHeight || data.settings.twoPage);
+  R.screens = [[1]];
+  for (let p = 2; p <= n; p += pair ? 2 : 1) R.screens.push(pair && p < n ? [p, p + 1] : [p]);
+  R.cache.clear();
+}
+const screenOf = page => Math.max(0, R.screens.findIndex(s => s.includes(page)));
+
+async function renderScreen(pages) {
+  const W = stage.clientWidth, H = stage.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2);
+  const pgs = await Promise.all(pages.map(n => R.pdf.getPage(n)));
+  const vps = pgs.map(p => p.getViewport({ scale: 1 }));
+  const s = Math.min(H / Math.max(...vps.map(v => v.height)), W / vps.reduce((a, v) => a + v.width, 0));
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  c.className = 'page'; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+  let x = (W - s * vps.reduce((a, v) => a + v.width, 0)) / 2;
+  for (let k = 0; k < pgs.length; k++) {
+    const w = vps[k].width * s, h = vps[k].height * s, y = (H - h) / 2;
+    const v = pgs[k].getViewport({ scale: s * dpr }), tmp = document.createElement('canvas');
+    tmp.width = Math.ceil(v.width); tmp.height = Math.ceil(v.height);
+    await pgs[k].render({ canvasContext: tmp.getContext('2d'), viewport: v }).promise;
+    ctx.shadowColor = 'rgba(90,52,24,.3)'; ctx.shadowBlur = 18 * dpr; ctx.fillStyle = '#fff';
+    ctx.fillRect(x * dpr, y * dpr, w * dpr, h * dpr);
+    ctx.shadowColor = 'transparent';
+    ctx.drawImage(tmp, x * dpr, y * dpr, w * dpr, h * dpr);
+    x += w;
+  }
+  return c;
+}
+function getScreen(i) {   // cached {p: promise, c: canvas once ready}
+  if (!R.screens?.[i]) return null;
+  let e = R.cache.get(i);
+  if (!e) {
+    const screens = R.screens;
+    e = { p: renderScreen(screens[i]).then(c => (e.c = c)) };
+    R.cache.set(i, e);
+  }
+  return e;
+}
+function place(c) { stage.querySelectorAll('canvas.page').forEach(x => x !== c && x.remove()); stage.prepend(c); }
+async function goTo(i) {
+  R.i = i;
+  const e = getScreen(i), c = await e.p;
+  if (R.i !== i || R.cache.get(i) !== e) return;
+  place(c); settle();
+}
+function settle() {   // after any landing: save progress, update number, pre-render neighbours, trim cache
+  const first = R.screens[R.i][0];
+  data.progress[R.book.id] = first; save();
+  $('#pageNum').textContent = first;
+  getScreen(R.i - 1); getScreen(R.i + 1);
+  for (const k of R.cache.keys()) if (Math.abs(k - R.i) > 2) R.cache.delete(k);
+}
+async function ritual() {
+  clearRitual(); $('#end').hidden = true;
+  await goTo(0);
+  if (R.i === 0 && R.book) R.ritual = setTimeout(() => { R.ritual = null; turn(1); }, 1000);
+}
+function clearRitual() { clearTimeout(R.ritual); R.ritual = null; }
+
+/* Flip = the outgoing half stays, a leaf (outgoing half front / incoming half back) turns on the spine. */
+function half(src, side, shade) {
+  const d = document.createElement('div'), c = document.createElement('canvas');
+  d.className = 'half ' + side;
+  c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src, 0, 0);
+  d.append(c);
+  if (shade) d.insertAdjacentHTML('beforeend', '<i class="shade"></i>');
+  return d;
+}
+function makeFlip(dir, inc) {
+  const out = curCanvas(), f = document.createElement('div'), leaf = document.createElement('div');
+  const [a, b] = dir > 0 ? ['L', 'R'] : ['R', 'L'];
+  f.className = 'flip ' + (dir > 0 ? 'fwd' : 'back'); leaf.className = 'leaf';
+  leaf.append(half(out, b, true), half(inc, a, true));
+  f.append(half(out, a, false), leaf);
+  place(inc); stage.append(f);
+  R.busy = true;
+  return { el: f, leaf, dir, out, p: 0 };
+}
+function setP(f, p) {
+  f.p = p;
+  f.leaf.style.transform = `rotateY(${-f.dir * 180 * p}deg)`;
+  f.leaf.style.setProperty('--s', Math.sin(Math.PI * p).toFixed(3));
+}
+function animate(f, to, ms = 450) {
+  const from = f.p, d = ms * Math.abs(to - from), t0 = performance.now();
+  return new Promise(res => {
+    const step = t => {
+      const k = d ? Math.min(1, (t - t0) / d) : 1, e = k < .5 ? 2 * k * k : 1 - (2 - 2 * k) ** 2 / 2;
+      setP(f, from + (to - from) * e);
+      k < 1 ? requestAnimationFrame(step) : res();
+    };
+    step(t0);
+  });
+}
+function endFlip(f, done) {
+  f.el.remove(); R.busy = false;
+  if (done) { R.i += f.dir; whoosh(); settle(); } else place(f.out);
+}
+async function turn(dir) {
+  if (R.busy || !R.screens || !curCanvas()) return;
+  clearRitual();
+  const j = R.i + dir;
+  if (j < 0) return;
+  if (j >= R.screens.length) return finish();
+  R.busy = true;
+  const c = await getScreen(j).p;
+  if (!R.book) return;
+  const f = makeFlip(dir, c);
+  await animate(f, 1);
+  endFlip(f, true);
+}
+stage.onpointerdown = e => {
+  if (R.ritual) { clearRitual(); return turn(1); }
+  if (R.busy || !curCanvas()) return;
+  const r = stage.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
+  const dir = x > 2 / 3 ? 1 : x < 1 / 3 ? -1 : 0;
+  if (!dir) return;
+  R.drag = { dir, x0: e.clientX, W: r.width, dx: 0, f: null };
+  stage.setPointerCapture(e.pointerId);
+};
+stage.onpointermove = e => {
+  const d = R.drag;
+  if (!d) return;
+  d.dx = (e.clientX - d.x0) * -d.dir;   // distance moved in the turning direction
+  if (!d.f) {
+    if (d.dx < 10) return;
+    const j = R.i + d.dir;
+    if (j >= R.screens.length) { d.end = true; return; }   // last screen: release past 35% goes to the end screen
+    const c = getScreen(j)?.c;
+    if (!c) { R.drag = null; return; }
+    d.f = makeFlip(d.dir, c);
+  }
+  setP(d.f, Math.max(0, Math.min(1, d.dx / d.W)));
+};
+stage.onpointerup = stage.onpointercancel = async e => {
+  const d = R.drag;
+  R.drag = null;
+  if (!d) return;
+  const ok = e.type === 'pointerup' && d.dx > d.W * .35;
+  if (d.f) { await animate(d.f, ok ? 1 : 0, 300); endFlip(d.f, ok); }
+  else if (d.end && ok) finish();
+};
+
+function finish() {
+  clearRitual();
+  data.finished[R.book.id] = today(); delete data.progress[R.book.id]; save();
+  whoosh();
+  $('#nextStory').hidden = !books[num(R.book)];
+  $('#end').hidden = false;
+}
+function updateDash() {
+  $('#favBtn').textContent = data.favourites.includes(R.book.id) ? '⭐' : '☆';
+  $('#soundBtn').textContent = data.settings.pageSound ? '🔊' : '🔇';
+  $('#viewBtn').hidden = !(R.book.mode === 'single' && innerHeight > innerWidth);
+  $('#viewBtn').innerHTML = data.settings.twoPage ? '1 | <b>2</b>' : '<b>1</b> | 2';
+}
+function relayout() {   // orientation / view / mode change: keep the same first page
+  if (!R.book || !R.screens || R.busy) return;
+  const page = R.screens[R.i][0];
+  computeScreens(); updateDash(); stage.innerHTML = ''; goTo(screenOf(page));
+}
+let resizeTimer;
+addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(relayout, 200); });
+$('#homeBtn').onclick = $('#endHome').onclick = () => { closeReader(); goLibrary(); };
+$('#restartBtn').onclick = () => { if (!R.busy && R.screens) ritual(); };
+$('#againBtn').onclick = ritual;
+$('#nextStory').onclick = () => { const b = books[num(R.book)]; closeReader(); openBook(b); };
+$('#prevBtn').onclick = () => turn(-1);
+$('#nextBtn').onclick = () => turn(1);
+$('#favBtn').onclick = () => toggleFav(R.book.id);
+$('#soundBtn').onclick = () => { data.settings.pageSound = !data.settings.pageSound; save(); updateDash(); };
+$('#viewBtn').onclick = () => { data.settings.twoPage = !data.settings.twoPage; save(); relayout(); };
+
+/* ---------- Settings ---------- */
+let importMsg = '';
+function openSettings() { show('settings'); $('#reader').hidden = !R.book; $('#library').hidden = !!R.book; renderSettings(); }
+$('#closeSettings').onclick = () => {
+  $('#settings').hidden = true;
+  if (!R.book) return goLibrary();
+  if (!books.includes(R.book)) { closeReader(); return goLibrary(); }
+  relayout();
+};
+const seg = (act, cur, opts) => opts.map(([v, label]) =>
+  `<button class="btn ${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${label}</button>`).join(' ');
+const check = (act, on, label, disabled) =>
+  `<label class="item"><input type="checkbox" data-act="${act}" ${on ? 'checked' : ''} ${disabled ? 'disabled' : ''}> ${label}</label>`;
+function renderSettings() {
+  const S = data.settings, mb = books.reduce((a, b) => a + b.fileBlob.size, 0) / 1048576;
+  $('#settingsBody').innerHTML = `
+  <section><h3>📚 Books</h3>
+    <button class="btn on" data-act="add">➕ Add Books</button> <span>${esc(importMsg)}</span>
+    ${books.map(b => `<div class="item" data-id="${b.id}"><img alt="" src="${thumbs.get(b.id)}"><b>${num(b)}</b>
+      <input type="text" data-act="rename" value="${esc(b.title)}">
+      <select data-act="mode"><option value="single">Single pages</option><option value="spread" ${b.mode === 'spread' ? 'selected' : ''}>Already spreads</option></select>
+      <button class="btn danger" data-act="del">Delete</button></div>`).join('')}
+  </section>
+  <section><h3>🗂 Categories</h3>
+    <div class="item"><input type="text" id="catName" placeholder="New category name"><button class="btn on" data-act="addcat">Create</button></div>
+    ${data.categories.map((c, i) => `<div class="cat" data-i="${i}">
+      <div class="item"><input type="text" data-act="catname" value="${esc(c.name)}">
+        <button class="btn" data-act="up">▲</button><button class="btn" data-act="down">▼</button>
+        <button class="btn danger" data-act="delcat">Delete</button></div>
+      <details><summary>Choose books (${c.books.length})</summary>
+        ${books.map(b => `<label><input type="checkbox" data-act="assign" value="${b.id}" ${c.books.includes(b.id) ? 'checked' : ''}> ${esc(b.title)}</label>`).join('')}
+      </details></div>`).join('')}
+  </section>
+  <section><h3>🏠 Library</h3>
+    <p>Layout: ${seg('layout', S.layout, [['E', 'Story Rows'], ['A', 'Bookshelf']])}</p>
+    <p>Tiles: ${seg('tile', S.tile, [['square', 'Square'], ['book', 'Book-shaped']])}</p>
+  </section>
+  <section><h3>🔊 Sound &amp; Music</h3>
+    ${check('pageSound', S.pageSound, 'Page-turn sound')}
+    ${check('music', S.music && music, 'Background music', !music)}
+    ${music ? '' : '<p class="note">No music file yet — add assets/music/library.mp3 to the app to turn this on.</p>'}
+  </section>
+  <section><h3>💾 Storage</h3>
+    <p>Books on this iPad: ${mb.toFixed(1)} MB</p>
+    <p class="note">The app itself is saved for offline use automatically once installed. Imported books never need the internet.</p>
+    <button class="btn danger" data-act="delall">Delete ALL books</button>
+  </section>
+  <section><h3>⚠️ Danger zone</h3>
+    <button class="btn danger" data-act="reset">Reset reading progress</button>
+    <p class="note">Clears saved pages, ✓ and ⭐. Keeps books, favourites and categories.</p>
+  </section>`;
+}
+$('#settingsBody').onclick = async e => {
+  const t = e.target.closest('button[data-act]');
+  if (!t) return;
+  const act = t.dataset.act, id = t.closest('[data-id]')?.dataset.id, i = +t.closest('[data-i]')?.dataset.i, cats = data.categories;
+  if (act === 'add') return $('#fileIn').click();
+  if (act === 'del' && confirm('Delete this book from the iPad?')) { await idb('delete', id); forget(id); }
+  if (act === 'delall' && confirm('Delete ALL books from this iPad?')) { await idb('clear'); books.map(b => b.id).forEach(forget); }
+  if (act === 'reset' && confirm('Reset reading progress, ✓ and ⭐ for every book?')) { data.progress = {}; data.finished = {}; save(); }
+  if (act === 'addcat') {
+    const name = $('#catName').value.trim();
+    if (name) { cats.push({ id: crypto.randomUUID(), name, books: [] }); save(); }
+  }
+  if (act === 'delcat' && confirm(`Delete the category "${cats[i].name}"? (Books stay.)`)) { cats.splice(i, 1); save(); }
+  if (act === 'up' || act === 'down') {
+    const j = act === 'up' ? i - 1 : i + 1;
+    if (cats[j]) { [cats[i], cats[j]] = [cats[j], cats[i]]; save(); }
+  }
+  if (act === 'layout' || act === 'tile') { data.settings[act] = t.dataset.v; save(); }
+  renderSettings();
+};
+$('#settingsBody').onchange = async e => {
+  const t = e.target, act = t.dataset.act, b = books.find(x => x.id === t.closest('[data-id]')?.dataset.id), c = data.categories[t.closest('[data-i]')?.dataset.i];
+  if (act === 'rename' && t.value.trim()) { b.title = t.value.trim(); await idb('put', b); sortBooks(); }
+  if (act === 'mode') { b.mode = t.value; await idb('put', b); }
+  if (act === 'catname' && t.value.trim()) c.name = t.value.trim();
+  if (act === 'assign') {
+    c.books = t.checked ? [...c.books, t.value] : c.books.filter(x => x !== t.value);
+    t.closest('details').querySelector('summary').textContent = `Choose books (${c.books.length})`;
+  }
+  if (act === 'pageSound' || act === 'music') {
+    data.settings[act] = t.checked;
+    if (act === 'music') updateMusicBtn();
+  }
+  save();
+  if (act === 'rename' || act === 'catname') renderSettings();
+};
+
+/* ---------- Import ---------- */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[\s_.-]*/i;
+const cleanName = n => n.replace(/\.pdf$/i, '').replace(UUID, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Untitled story';
+function goodTitle(t) {
+  t = (t || '').trim();
+  return t.length > 2 && !/^(untitled|unknown|document|microsoft|scan|img|image)\b|\.(pdf|docx?|indd|pages|jpe?g|png)$/i.test(t) ? t : '';
+}
+async function detectMode(pdf) {   // median content-page shape: landscape => already spreads
+  const n = pdf.numPages, first = n > 1 ? 2 : 1, step = Math.ceil((n - first + 1) / 9), ratios = [];
+  for (let p = first; p <= n; p += step) {
+    const v = (await pdf.getPage(p)).getViewport({ scale: 1 });
+    ratios.push(v.width / v.height);
+  }
+  ratios.sort((a, b) => a - b);
+  return ratios[ratios.length >> 1] > 1 ? 'spread' : 'single';
+}
+$('#fileIn').onchange = async e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length) return;
+  let added = 0, skipped = 0, failed = 0;
+  for (const file of files) {
+    importMsg = `Adding ${added + skipped + failed + 1} of ${files.length}…`; renderSettings();
+    let pdf;
+    try {
+      pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      const meta = await pdf.getMetadata().catch(() => ({}));
+      const title = goodTitle(meta.info?.Title) || cleanName(file.name);
+      if (books.some(b => b.title === title && b.pageCount === pdf.numPages && b.fileBlob.size === file.size)) { skipped++; continue; }
+      const mode = await detectMode(pdf), p1 = await pdf.getPage(1);
+      const v = p1.getViewport({ scale: 480 / p1.getViewport({ scale: 1 }).width }), c = document.createElement('canvas');
+      c.width = Math.round(v.width); c.height = Math.round(v.height);
+      await p1.render({ canvasContext: c.getContext('2d'), viewport: v }).promise;
+      const thumbBlob = await new Promise(r => c.toBlob(r, 'image/jpeg', .85));
+      const rec = { id: crypto.randomUUID(), title, fileBlob: new Blob([file], { type: 'application/pdf' }), thumbBlob,
+        pageCount: pdf.numPages, mode, addedAt: Date.now() };
+      await idb('put', rec);
+      addBook(rec); sortBooks(); added++;
+    } catch (err) { console.warn(file.name, err); failed++; }
+    finally { pdf?.destroy(); }
+  }
+  importMsg = `Added ${added}, skipped ${skipped} duplicate${skipped === 1 ? '' : 's'}` + (failed ? `, ${failed} could not be read` : '') + '.';
+  renderSettings();
+};
+
+/* ---------- Start ---------- */
+idb('getAll').then(list => list.forEach(addBook)).catch(err => console.warn(err)).finally(() => { sortBooks(); renderLibrary(); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
 </body>
 </html>

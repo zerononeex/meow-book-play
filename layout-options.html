@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meow Book — Landscape Layout Options</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, sans-serif; background:#1d1a26; color:#f5efe4; padding:20px 16px 40px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; text-align:center; }
+  .sub { text-align:center; color:#cbbf9f; margin:0 0 24px; font-size:.95rem; }
+  .opt { max-width:860px; margin:0 auto 28px; }
+  .opt h2 { font-size:1.1rem; margin:0 0 4px; }
+  .opt p { margin:0 0 10px; color:#d8cdb2; font-size:.92rem; line-height:1.45; }
+  .frame { aspect-ratio: 4/3; border-radius:18px; overflow:hidden; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.45); }
+  .bar { display:flex; gap:8px; align-items:center; padding:10px 12px; }
+  .search { flex:1; background:rgba(255,255,255,.92); color:#8a7f66; border-radius:999px; padding:6px 14px; font-size:.8rem; }
+  .star { background:#ffd34d; border-radius:999px; padding:5px 10px; font-size:.8rem; color:#6b5200; font-weight:700; }
+  .logo { font-weight:800; font-size:.9rem; }
+  .book { border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:#fff; font-weight:700; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,.25); position:relative; }
+  .book .cat { font-size:1.5rem; }
+  .book .t { font-size:.62rem; line-height:1.15; padding:0 4px; }
+  .book .num { position:absolute; top:4px; left:6px; font-size:.6rem; background:rgba(0,0,0,.25); border-radius:999px; padding:1px 6px; }
+  .book .fav { position:absolute; top:2px; right:5px; font-size:.7rem; }
+  .book .done { position:absolute; bottom:4px; right:5px; font-size:.75rem; background:#43c465; border-radius:50%; width:18px; height:18px; line-height:18px; }
+  .c1{background:#e2574c}.c2{background:#4c8de2}.c3{background:#43b581}.c4{background:#f2a93b}.c5{background:#9b59c9}.c6{background:#e270b0}.c7{background:#3bb3c4}.c8{background:#718355}
+
+  /* A — Bookshelf */
+  .fa { background:linear-gradient(#8a5a33,#6f4525); }
+  .fa .wall { position:absolute; inset:0; background:linear-gradient(#f7e3bd,#f3d9a7); }
+  .fa .inner { position:relative; padding:0 18px; }
+  .shelf { display:flex; gap:14px; align-items:flex-end; padding:0 8px; border-bottom:14px solid #8a5a33; margin-bottom:20px; min-height:118px; }
+  .shelf .book { width:82px; height:104px; }
+
+  /* B — Square tiles */
+  .fb { background:linear-gradient(160deg,#aee3ff,#d8f3dc); }
+  .fb .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; padding:6px 18px 18px; }
+  .fb .book { aspect-ratio:1; border-radius:20px; }
+  .fb .book .cat{ font-size:2rem; } .fb .book .t{ font-size:.72rem; }
+
+  /* C — Open-book tiles */
+  .fc { background:linear-gradient(160deg,#ffe8ec,#fff3d6); }
+  .fc .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:6px 18px 18px; }
+  .fc .book { aspect-ratio:4/3; border-radius:8px; }
+  .fc .book::after { content:""; position:absolute; top:0; bottom:0; left:50%; width:3px; background:rgba(0,0,0,.22); border-radius:2px; }
+  .fc .book .cat{ font-size:1.9rem; }
+
+  /* D — Cozy rug */
+  .fd { background:linear-gradient(#5b4570,#3e2f52); }
+  .fd .lamp { position:absolute; top:12px; right:20px; font-size:2rem; }
+  .fd .rug { position:absolute; left:6%; right:6%; bottom:7%; height:72%; background:radial-gradient(ellipse at center,#e270b0,#b84a86); border-radius:50%; opacity:.95; }
+  .fd .book { position:absolute; width:104px; height:132px; }
+  .fd .b1{ left:12%; top:22%; transform:rotate(-8deg);} .fd .b2{ left:34%; top:12%; transform:rotate(5deg);}
+  .fd .b3{ left:57%; top:20%; transform:rotate(-3deg);} .fd .b4{ left:26%; top:52%; transform:rotate(7deg);}
+  .fd .b5{ left:52%; top:55%; transform:rotate(-6deg);} .fd .b6{ left:74%; top:48%; transform:rotate(9deg);}
+
+  /* E — Story rows */
+  .fe { background:linear-gradient(#20344d,#16222f); }
+  .fe .rowlabel { color:#ffd34d; font-weight:800; font-size:.8rem; padding:8px 16px 0; }
+  .fe .row { display:flex; gap:14px; padding:8px 16px; overflow:hidden; }
+  .fe .book { width:96px; height:122px; flex:none; }
+  .fe .row .book:first-child { outline:4px solid #ffd34d; }
+
+  /* F — Featured + grid */
+  .ff { background:linear-gradient(150deg,#fdf0d5,#f9dcc4); color:#4a3620; }
+  .ff .inner { display:flex; gap:18px; padding:4px 18px 18px; }
+  .ff .big { width:42%; }
+  .ff .big .book { width:100%; height:250px; border-radius:12px; }
+  .ff .big .book .cat{ font-size:3.2rem; } .ff .big .book .t{ font-size:.95rem; }
+  .ff .small { flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .ff .small .book { aspect-ratio:3/4; }
+  .pill { display:inline-block; background:#43c465; color:#fff; font-size:.65rem; font-weight:800; border-radius:999px; padding:2px 8px; margin-top:4px; }
+</style>
+</head>
+<body>
+<h1>🐱 Meow Book — pick a library layout</h1>
+<p class="sub">Six landscape (iPad) ideas for the book catalog. Every cover would be the real first page of that story's PDF — these are just shapes. Tell me the letter you like (mixing two is fine).</p>
+
+<div class="opt">
+  <h2>A — The Bookshelf</h2>
+  <p>Books sit on real wooden shelves against a warm library wall. Most "real book" feeling. Kid scans the shelf and taps a book, like pulling it off the shelf. Fun background is built in.</p>
+  <div class="frame fa"><div class="wall"></div><div class="inner">
+    <div class="bar"><span class="logo">🐱 Meow Book</span><span class="search">🔍 Search a story…</span><span class="star">★ Favourites</span></div>
+    <div class="shelf">
+      <div class="book c1"><span class="num">1</span><span class="fav">★</span><span class="cat">🐱</span><span class="t">The Big Yarn</span></div>
+      <div class="book c2"><span class="num">2</span><span class="cat">🐈</span><span class="t">Pip's Nap</span><span class="done">✓</span></div>
+      <div class="book c3"><span class="num">3</span><span class="cat">🐱</span><span class="t">Moon Milk</span></div>
+      <div class="book c4"><span class="num">4</span><span class="cat">🐈‍⬛</span><span class="t">Shadow Cat</span></div>
+      <div class="book c5"><span class="num">5</span><span class="cat">🐱</span><span class="t">Garden Day</span></div>
+      <div class="book c6"><span class="num">6</span><span class="cat">🐈</span><span class="t">Rain Boots</span></div>
+    </div>
+    <div class="shelf">
+      <div class="book c7"><span class="num">7</span><span class="cat">🐱</span><span class="t">Fish Wish</span></div>
+      <div class="book c8"><span class="num">8</span><span class="cat">🐈</span><span class="t">Tall Tower</span><span class="done">✓</span></div>
+      <div class="book c2"><span class="num">9</span><span class="cat">🐱</span><span class="t">Tiny Tail</span></div>
+      <div class="book c1"><span class="num">10</span><span class="cat">🐈‍⬛</span><span class="t">Night Song</span></div>
+      <div class="book c3"><span class="num">11</span><span class="cat">🐱</span><span class="t">Soup Day</span></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="opt">
+  <h2>B — Big Square Tiles</h2>
+  <p>Big friendly squares, like app icons — the easiest possible target for a very young kid. Bright sky/garden background. Your "square view" idea. Titles big and clear under the cat art.</p>
+  <div class="frame fb">
+    <div class="bar"><span class="logo">🐱 Meow Book</span><span class="search">🔍 Search a story…</span><span class="star">★ Favourites</span></div>
+    <div class="grid">
+      <div class="book c1"><span class="num">1</span><span class="fav">★</span><span class="cat">🐱</span><span class="t">The Big Yarn</span></div>
+      <div class="book c2"><span class="num">2</span><span class="cat">🐈</span><span class="t">Pip's Nap</span><span class="done">✓</span></div>
+      <div class="book c4"><span class="num">3</span><span class="cat">🐱</span><span class="t">Moon Milk</span></div>
+      <div class="book c5"><span class="num">4</span><span class="cat">🐈‍⬛</span><span class="t">Shadow Cat</span></div>
+      <div class="book c3"><span class="num">5</span><span class="cat">🐱</span><span class="t">Garden Day</span></div>
+      <div class="book c6"><span class="num">6</span><span class="cat">🐈</span><span class="t">Rain Boots</span></div>
+      <div class="book c7"><span class="num">7</span><span class="cat">🐱</span><span class="t">Fish Wish</span></div>
+      <div class="book c8"><span class="num">8</span><span class="cat">🐈</span><span class="t">Tall Tower</span><span class="done">✓</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="opt">
+  <h2>C — Open-Book Tiles</h2>
+  <p>Every tile is shaped like an open book (two pages + spine) — a hint of what's inside, since the reader shows 2-page spreads. Your "rectangular view" idea. Soft bedtime colours.</p>
+  <div class="frame fc">
+    <div class="bar"><span class="logo">🐱 Meow Book</span><span class="search">🔍 Search a story…</span><span class="star">★ Favourites</span></div>
+    <div class="grid">
+      <div class="book c2"><span class="num">1</span><span class="fav">★</span><span class="cat">🐱</span><span class="t">The Big Yarn</span></div>
+      <div class="book c6"><span class="num">2</span><span class="cat">🐈</span><span class="t">Pip's Nap</span><span class="done">✓</span></div>
+      <div class="book c3"><span class="num">3</span><span class="cat">🐱</span><span class="t">Moon Milk</span></div>
+      <div class="book c1"><span class="num">4</span><span class="cat">🐈‍⬛</span><span class="t">Shadow Cat</span></div>
+      <div class="book c7"><span class="num">5</span><span class="cat">🐱</span><span class="t">Garden Day</span></div>
+      <div class="book c4"><span class="num">6</span><span class="cat">🐈</span><span class="t">Rain Boots</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="opt">
+  <h2>D — The Cozy Rug</h2>
+  <p>Story-time scene: books spread out on a big rug under a lamp, slightly tilted like a kid laid them out. The most playful and storybook-like — but the messiest to search and sort, and covers sit at angles.</p>
+  <div class="frame fd">
+    <div class="lamp">🛋️💡</div>
+    <div class="bar" style="position:relative;z-index:2"><span class="logo" style="color:#ffd34d">🐱 Meow Book</span><span class="search">🔍 Search a story…</span><span class="star">★ Favourites</span></div>
+    <div class="rug"></div>
+    <div class="book c1 b1"><span class="num">1</span><span class="cat">🐱</span><span class="t">The Big Yarn</span></div>
+    <div class="book c3 b2"><span class="num">2</span><span class="cat">🐈</span><span class="t">Pip's Nap</span><span class="done">✓</span></div>
+    <div class="book c5 b3"><span class="num">3</span><span class="cat">🐱</span><span class="t">Moon Milk</span></div>
+    <div class="book c2 b4"><span class="num">4</span><span class="cat">🐈‍⬛</span><span class="t">Shadow Cat</span></div>
+    <div class="book c6 b5"><span class="num">5</span><span class="cat">🐱</span><span class="t">Garden Day</span></div>
+    <div class="book c4 b6"><span class="num">6</span><span class="cat">🐈</span><span class="t">Rain Boots</span></div>
+  </div>
+</div>
+
+<div class="opt">
+  <h2>E — Story Rows</h2>
+  <p>Swipe sideways along rows: Favourites on top, then All Stories. Big covers, cinematic dark-library look, very iPad-native. Great when there are lots of books; each row scrolls on its own.</p>
+  <div class="frame fe">
+    <div class="bar"><span class="logo" style="color:#ffd34d">🐱 Meow Book</span><span class="search">🔍 Search a story…</span><span class="star">★ Favourites</span></div>
+    <div class="rowlabel">★ Favourites</div>
+    <div class="row">
+      <div class="book c1"><span class="num">1</span><span class="cat">🐱</span><span class="t">The Big Yarn</span></div>
+      <div class="book c4"><span class="num">4</span><span class="cat">🐈‍⬛</span><span class="t">Shadow Cat</span></div>
+      <div class="book c7"><span class="num">7</span><span class="cat">🐱</span><span class="t">Fish Wish</span></div>
+      <div class="book c3"><span class="num">11</span><span class="cat">🐱</span><span class="t">Soup Day</span></div>
+    </div>
+    <div class="rowlabel">📚 All Stories</div>
+    <div class="row">
+      <div class="book c2"><span class="num">2</span><span class="cat">🐈</span><span class="t">Pip's Nap</span><span class="done">✓</span></div>
+      <div class="book c3"><span class="num">3</span><span class="cat">🐱</span><span class="t">Moon Milk</span></div>
+      <div class="book c5"><span class="num">5</span><span class="cat">🐱</span><span class="t">Garden Day</span></div>
+      <div class="book c6"><span class="num">6</span><span class="cat">🐈</span><span class="t">Rain Boots</span></div>
+      <div class="book c8"><span class="num">8</span><span class="cat">🐈</span><span class="t">Tall Tower</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="opt">
+  <h2>F — Start Here + More Books</h2>
+  <p>One giant book on the left ("start here" — the newest or tonight's pick), the rest in a tidy grid beside it. Best if your friend wants to steer the kid to a specific book each day. Warm paper background.</p>
+  <div class="frame ff">
+    <div class="bar"><span class="logo">🐱 Meow Book</span><span class="search">🔍 Search a story…</span><span class="star">★ Favourites</span></div>
+    <div class="inner">
+      <div class="big">
+        <div class="book c1"><span class="fav">★</span><span class="cat">🐱📖</span><span class="t">The Big Yarn</span><span class="pill">▶ START HERE</span></div>
+      </div>
+      <div class="small">
+        <div class="book c2"><span class="num">2</span><span class="cat">🐈</span><span class="t">Pip's Nap</span><span class="done">✓</span></div>
+        <div class="book c3"><span class="num">3</span><span class="cat">🐱</span><span class="t">Moon Milk</span></div>
+        <div class="book c4"><span class="num">4</span><span class="cat">🐈‍⬛</span><span class="t">Shadow</span></div>
+        <div class="book c5"><span class="num">5</span><span class="cat">🐱</span><span class="t">Garden Day</span></div>
+        <div class="book c6"><span class="num">6</span><span class="cat">🐈</span><span class="t">Rain Boots</span></div>
+        <div class="book c7"><span class="num">7</span><span class="cat">🐱</span><span class="t">Fish Wish</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

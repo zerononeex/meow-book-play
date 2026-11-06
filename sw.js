@@ -1,8 +1,9 @@
 // Bump CACHE when shipping changes so installed iPads pick up the new files.
-const CACHE = 'meow-library-v2';
+const CACHE = 'meow-library-v3';
 const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
 const PRECACHE = ['./', 'index.html', 'assets/enter-hero.jpg', 'assets/library-background.jpg',
-  'assets/congrats-cat.jpg', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest'];
+  'assets/congrats-cat.jpg', 'icon-512.png', 'apple-touch-icon.png', 'manifest.webmanifest',
+  ...['home', 'music', 'star', 'gear', 'arrow', 'readagain'].map(n => `assets/icons/${n}.png`)];
 
 self.addEventListener('install', e => e.waitUntil(
   caches.open(CACHE)

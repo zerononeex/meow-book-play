@@ -193,6 +193,7 @@ input, select { font: inherit; -webkit-user-select: text; user-select: text; }
 .btn { min-height: 48px; padding: 0 18px; border-radius: 14px; background: #f6dfb4; font-weight: 800; }
 .btn.on { background: var(--orange); color: #fff; }
 .btn.danger { background: #e45b4f; color: #fff; }
+.btn.chev svg { display: block; width: 1.06em; height: 1.06em; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0; }
 .item img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
 .item input[type=text] { flex: 1; min-width: 120px; height: 46px; padding: 0 12px; border-radius: 12px; border: 2px solid #e8c48f; }
@@ -799,7 +800,7 @@ function renderSettings() {
     <div class="item"><input type="text" id="catName" placeholder="New category name"><button class="btn on" data-act="addcat">Create</button></div>
     ${data.categories.map((c, i) => `<div class="cat" data-i="${i}">
       <div class="item"><input type="text" data-act="catname" value="${esc(c.name)}">
-        <button class="btn" data-act="up">▲</button><button class="btn" data-act="down">▼</button>
+        <button class="btn chev" data-act="up" aria-label="Move up"><svg viewBox="3 3 18 18" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button><button class="btn chev" data-act="down" aria-label="Move down"><svg viewBox="3 3 18 18" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button>
         <button class="btn danger" data-act="delcat">Delete</button></div>
       <details><summary>Choose books (${c.books.length})</summary>
         ${books.map(b => `<label><input type="checkbox" data-act="assign" value="${b.id}" ${c.books.includes(b.id) ? 'checked' : ''}> ${esc(b.title)}</label>`).join('')}
